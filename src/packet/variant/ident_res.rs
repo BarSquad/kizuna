@@ -1,0 +1,76 @@
+use crate::packet::base::PacketSelfHandler;
+use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
+use crate::packet::Packet;
+use crate::util::addr::{bytes_to_ip, ip_to_bytes};
+use crate::KizunaCtx;
+use async_trait::async_trait;
+use byteorder::{ByteOrder, LittleEndian};
+use bytes::{BufMut, Bytes, BytesMut};
+use std::convert::TryFrom;
+use std::net::IpAddr;
+
+pub struct IdentResPacket {
+    ip: IpAddr,
+    port: u16,
+}
+
+impl IdentResPacket {
+    pub const PKT: u8 = 3;
+
+    pub fn new(ip: IpAddr, port: u16) -> Self {
+        Self { ip, port }
+    }
+}
+
+impl Into<Bytes> for IdentResPacket {
+    fn into(self) -> Bytes {
+        let mut bytes = BytesMut::new();
+
+        bytes.put(Packet::SIG);
+        bytes.put_u8(IdentResPacket::PKT);
+        bytes.put(&ip_to_bytes(self.ip)[..]);
+        bytes.put_u16_le(self.port);
+
+        Bytes::from(bytes)
+    }
+}
+
+impl TryFrom<Bytes> for IdentResPacket {
+    type Error = ParsePacketError;
+
+    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
+        if bytes.len() != Packet::HEADER_LEN + 18 {
+            return Err(ParsePacketError::new(ParsePacketErrorKind::InvalidContent));
+        }
+
+        let ip_bytes = &bytes[Packet::HEADER_LEN..Packet::HEADER_LEN + 16];
+        let port_bytes = &bytes[Packet::HEADER_LEN + 16..Packet::HEADER_LEN + 18];
+
+        let ip = match bytes_to_ip(ip_bytes) {
+            Some(ip) => ip,
+            None => return Err(ParsePacketError::new(ParsePacketErrorKind::InvalidContent)),
+        };
+
+        let port = LittleEndian::read_u16(port_bytes);
+
+        Ok(IdentResPacket::new(ip, port))
+    }
+}
+
+// TODO: Написать обработку запроса (Запись адреса и определения цвета)
+#[async_trait]
+impl PacketSelfHandler for IdentResPacket {
+    async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
+        println!("My addr: {}:{}", self.ip, self.port);
+
+        let local_addr = ctx.req.sock.local_addr()?;
+
+        if local_addr.ip() == self.ip && local_addr.port() == self.port {
+            println!("I am white node!")
+        } else {
+            println!("I am gray node!")
+        }
+
+        Ok(())
+    }
+}
