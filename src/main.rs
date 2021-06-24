@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use std::io;
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 use udp_sas::UdpSas;
 
@@ -15,16 +15,34 @@ mod util;
 
 const ADDR: &'static str = "0.0.0.0:12345";
 
-pub struct Friend {
-    pub addr: IpAddr,
+#[derive(Debug)]
+pub enum NodeColor {
+    White,
+    Gray,
 }
 
+#[derive(Debug)]
+pub struct Node {
+    pub ip: IpAddr,
+    pub port: u16,
+    pub color: NodeColor,
+}
+
+#[derive(Debug)]
 pub struct KizunaApp {
-    pub friends: Vec<Friend>,
+    pub me: Option<Node>,
+    pub friends: Vec<Node>,
 }
 
+impl KizunaApp {
+    pub fn set_me(&mut self, node: Node) {
+        self.me = Some(node);
+    }
+}
+
+#[derive(Debug)]
 pub struct KizunaCtx {
-    pub app: Arc<KizunaApp>,
+    pub app: Arc<Mutex<KizunaApp>>,
     pub req: RequestCtx,
 }
 
@@ -33,9 +51,10 @@ pub struct KizunaCtx {
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let app = Arc::new(KizunaApp {
+    let app = Arc::new(Mutex::new(KizunaApp {
+        me: None,
         friends: Vec::new(),
-    });
+    }));
 
     let mut serv = UdpServer::bind(ADDR).await?;
 
@@ -44,9 +63,9 @@ async fn main() -> io::Result<()> {
 
         async move {
             let packet = Packet::try_from(ctx.bytes.clone())?;
-            let ctx = KizunaCtx { app, req: ctx };
+            let ctx = &mut KizunaCtx { app, req: ctx };
 
-            packet.handle(&ctx).await
+            packet.handle(ctx).await
         }
     });
 
@@ -56,7 +75,7 @@ async fn main() -> io::Result<()> {
     // TODO: Удалить тестовый запрос
     let s = serv.sock.clone();
     tokio::spawn(async move {
-        sleep(Duration::from_secs(10)).await;
+        sleep(Duration::from_secs(3)).await;
 
         s.send_sas(
             req_bytes.as_ref(),

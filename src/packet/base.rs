@@ -46,10 +46,10 @@ impl TryFrom<Bytes> for Packet {
 impl PacketSelfHandler for Packet {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
         match self {
-            Packet::Echo(packet) => packet.handle(&ctx).await,
-            Packet::Ping(packet) => packet.handle(&ctx).await,
-            Packet::IdentReq(packet) => packet.handle(&ctx).await,
-            Packet::IdentRes(packet) => packet.handle(&ctx).await,
+            Packet::Echo(packet) => packet.handle(ctx).await,
+            Packet::Ping(packet) => packet.handle(ctx).await,
+            Packet::IdentReq(packet) => packet.handle(ctx).await,
+            Packet::IdentRes(packet) => packet.handle(ctx).await,
         }
     }
 }

@@ -2,7 +2,7 @@ use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
 use crate::packet::Packet;
 use crate::util::addr::{bytes_to_ip, ip_to_bytes};
-use crate::KizunaCtx;
+use crate::{KizunaCtx, Node, NodeColor};
 use async_trait::async_trait;
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::{BufMut, Bytes, BytesMut};
@@ -61,15 +61,20 @@ impl TryFrom<Bytes> for IdentResPacket {
 #[async_trait]
 impl PacketSelfHandler for IdentResPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        println!("My addr: {}:{}", self.ip, self.port);
+        let color =
+            if ctx.req.local_addr == self.ip && ctx.req.sock.local_addr()?.port() == self.port {
+                NodeColor::White
+            } else {
+                NodeColor::Gray
+            };
 
-        let local_addr = ctx.req.sock.local_addr()?;
+        ctx.app.lock().unwrap().set_me(Node {
+            color,
+            ip: self.ip,
+            port: self.port,
+        });
 
-        if ctx.req.local_addr == self.ip && local_addr.port() == self.port {
-            println!("I am white node!")
-        } else {
-            println!("I am gray node!")
-        }
+        println!("{:?}", ctx.app.clone().lock().unwrap().me);
 
         Ok(())
     }
