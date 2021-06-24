@@ -2,15 +2,15 @@ use bytes::Bytes;
 use std::fmt::Debug;
 use std::future::Future;
 use std::io;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr, ToSocketAddrs, UdpSocket};
 use std::sync::Arc;
-use tokio::net::{ToSocketAddrs, UdpSocket};
-use tokio::sync::mpsc;
+use udp_sas::UdpSas;
 
 #[derive(Debug)]
 pub struct RequestCtx {
     pub sock: Arc<UdpSocket>,
     pub addr: SocketAddr,
+    pub local_addr: IpAddr,
     pub bytes: Bytes,
 }
 
@@ -28,7 +28,7 @@ where
     E: Debug,
 {
     pub async fn bind<A: ToSocketAddrs>(addr: A) -> io::Result<Self> {
-        let sock = UdpSocket::bind(addr).await?;
+        let sock = UdpSocket::bind_sas(addr)?;
 
         println!("Started server on: {:?}", sock.local_addr()?);
 
@@ -38,49 +38,35 @@ where
         })
     }
 
-    pub async fn run(&self) -> io::Result<()> {
+    pub fn run(&self) -> io::Result<()> {
         let sock = self.sock.clone();
         let handler = match &self.handler {
             Some(handler) => handler.clone(),
             None => panic!("UdpServer: self.handler is not set"),
         };
 
-        let (tx, mut rx) = mpsc::channel::<RequestCtx>(1024);
+        let mut buf = [0; 1024];
 
-        tokio::spawn(async move {
-            while let Some(ctx) = rx.recv().await {
-                let handler = handler.clone();
+        loop {
+            let (len, addr, local_addr) = sock.recv_sas(&mut buf)?;
+            let ctx = RequestCtx {
+                sock: sock.clone(),
+                addr,
+                local_addr,
+                bytes: Bytes::from(buf[..len].to_vec()),
+            };
 
-                tokio::spawn(async move {
-                    match handler(ctx).await {
-                        Err(err) => eprintln!("{:?}", err),
-                        _ => (),
-                    }
-                });
-            }
-        });
+            println!("{:?}", ctx);
 
-        tokio::spawn(async move {
-            let mut buf = [0; 1024];
+            let handler = handler.clone();
 
-            loop {
-                // TODO: Убрать unwrap
-                let (len, addr) = sock.recv_from(&mut buf).await.unwrap();
-                let ctx = RequestCtx {
-                    sock: sock.clone(),
-                    addr,
-                    bytes: Bytes::from(buf[..len].to_vec()),
+            tokio::spawn(async move {
+                match handler(ctx).await {
+                    Err(err) => eprintln!("{:?}", err),
+                    _ => (),
                 };
-
-                println!("{:?}", ctx);
-
-                // TODO: Убрать unwrap
-                tx.send(ctx).await.unwrap();
-            }
-        })
-        .await?;
-
-        Ok(())
+            });
+        }
     }
 
     pub fn set_handler(&mut self, handler: F) {

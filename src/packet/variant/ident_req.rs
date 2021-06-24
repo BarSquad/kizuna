@@ -5,6 +5,7 @@ use crate::KizunaCtx;
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
+use udp_sas::UdpSas;
 
 pub struct IdentReqPacket {}
 
@@ -43,8 +44,7 @@ impl PacketSelfHandler for IdentReqPacket {
 
         ctx.req
             .sock
-            .send_to(res_bytes.as_ref(), ctx.req.addr)
-            .await?;
+            .send_sas(res_bytes.as_ref(), &ctx.req.addr, &ctx.req.local_addr)?;
 
         Ok(())
     }

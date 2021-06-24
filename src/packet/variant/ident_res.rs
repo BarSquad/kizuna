@@ -65,7 +65,7 @@ impl PacketSelfHandler for IdentResPacket {
 
         let local_addr = ctx.req.sock.local_addr()?;
 
-        if local_addr.ip() == self.ip && local_addr.port() == self.port {
+        if ctx.req.local_addr == self.ip && local_addr.port() == self.port {
             println!("I am white node!")
         } else {
             println!("I am gray node!")

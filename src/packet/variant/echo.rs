@@ -5,6 +5,7 @@ use crate::KizunaCtx;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::convert::TryFrom;
+use udp_sas::UdpSas;
 
 pub struct EchoPacket {
     rest: Vec<u8>,
@@ -31,7 +32,9 @@ impl TryFrom<Bytes> for EchoPacket {
 #[async_trait]
 impl PacketSelfHandler for EchoPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        ctx.req.sock.send_to(&self.rest[..], ctx.req.addr).await?;
+        ctx.req
+            .sock
+            .send_sas(&self.rest[..], &ctx.req.addr, &ctx.req.local_addr)?;
 
         Ok(())
     }

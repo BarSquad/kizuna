@@ -3,8 +3,11 @@ use crate::server::{RequestCtx, UdpServer};
 use bytes::Bytes;
 use std::convert::TryFrom;
 use std::io;
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
+use std::str::FromStr;
 use std::sync::Arc;
+use tokio::time::{sleep, Duration};
+use udp_sas::UdpSas;
 
 mod packet;
 mod server;
@@ -50,12 +53,20 @@ async fn main() -> io::Result<()> {
     let req = IdentReqPacket::new();
     let req_bytes: Bytes = req.into();
 
-    // Удалить тестовый запрос
-    serv.sock
-        .send_to(req_bytes.as_ref(), "81.177.140.148:12345")
-        .await?;
+    // TODO: Удалить тестовый запрос
+    let s = serv.sock.clone();
+    tokio::spawn(async move {
+        sleep(Duration::from_secs(10)).await;
 
-    serv.run().await?;
+        s.send_sas(
+            req_bytes.as_ref(),
+            &SocketAddr::from_str("81.177.140.148:12345").unwrap(),
+            &s.local_addr().unwrap().ip(),
+        )
+        .unwrap();
+    });
+
+    serv.run()?;
 
     Ok(())
 }

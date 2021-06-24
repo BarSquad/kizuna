@@ -4,6 +4,7 @@ use crate::KizunaCtx;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::convert::TryFrom;
+use udp_sas::UdpSas;
 
 const PONG_BYTES: &'static [u8] = "Pong\n".as_bytes();
 
@@ -28,7 +29,9 @@ impl TryFrom<Bytes> for PingPacket {
 #[async_trait]
 impl PacketSelfHandler for PingPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        ctx.req.sock.send_to(PONG_BYTES, ctx.req.addr).await?;
+        ctx.req
+            .sock
+            .send_sas(PONG_BYTES, &ctx.req.addr, &ctx.req.local_addr)?;
 
         Ok(())
     }
