@@ -1,54 +1,50 @@
+use async_trait::async_trait;
 use bytes::Bytes;
-use std::fmt::Debug;
-use std::future::Future;
 use std::io;
 use std::net::{IpAddr, SocketAddr, ToSocketAddrs, UdpSocket};
 use std::sync::Arc;
 use udp_sas::UdpSas;
 
 #[derive(Debug)]
-pub struct RequestCtx {
+pub struct UdpCtx {
     pub sock: Arc<UdpSocket>,
     pub addr: SocketAddr,
     pub local_addr: IpAddr,
     pub bytes: Bytes,
 }
 
-pub struct UdpServer<F> {
-    sock: Arc<UdpSocket>,
-    handler: Option<Arc<F>>,
+#[async_trait]
+pub trait UdpHandler: Sync + Send + 'static {
+    async fn handle(&self, ctx: &UdpCtx) -> Result<(), ()>;
 }
 
+pub struct UdpServer {
+    sock: Arc<UdpSocket>,
+    handler: Arc<dyn UdpHandler>,
+}
+
+// TODO: Добавить прокидывание ошибок
 // TODO: Реализовать нормальное логгирование
-impl<F, R, E> UdpServer<F>
-where
-    F: Fn(RequestCtx) -> R + Send + Sync + 'static,
-    R: Future<Output = Result<(), E>> + Send,
-    E: Debug,
-{
-    pub async fn bind<A: ToSocketAddrs>(addr: A) -> io::Result<Self> {
+impl UdpServer {
+    pub fn bind<A: ToSocketAddrs, H: UdpHandler>(addr: A, handler: H) -> io::Result<Self> {
         let sock = UdpSocket::bind_sas(addr)?;
 
         println!("Started server on: {:?}", sock.local_addr()?);
 
         Ok(Self {
             sock: Arc::new(sock),
-            handler: None,
+            handler: Arc::new(handler),
         })
     }
 
     pub fn run(&self) -> io::Result<()> {
         let sock = self.sock.clone();
-        let handler = match &self.handler {
-            Some(handler) => handler.clone(),
-            None => panic!("UdpServer: self.handler is not set"),
-        };
 
         let mut buf = [0; 1024];
 
         loop {
             let (len, addr, local_addr) = sock.recv_sas(&mut buf)?;
-            let ctx = RequestCtx {
+            let ctx = UdpCtx {
                 sock: sock.clone(),
                 addr,
                 local_addr,
@@ -57,18 +53,14 @@ where
 
             println!("{:?}", ctx);
 
-            let handler = handler.clone();
+            let handler = self.handler.clone();
 
             tokio::spawn(async move {
-                match handler(ctx).await {
+                match handler.handle(&ctx).await {
                     Err(err) => eprintln!("{:?}", err),
                     _ => (),
                 };
             });
         }
-    }
-
-    pub fn set_handler(&mut self, handler: F) {
-        self.handler = Some(Arc::new(handler));
     }
 }

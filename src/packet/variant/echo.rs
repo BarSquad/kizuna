@@ -1,7 +1,7 @@
+use crate::core::server::KizunaCtx;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError};
 use crate::packet::Packet;
-use crate::KizunaCtx;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::convert::TryFrom;
@@ -32,9 +32,9 @@ impl TryFrom<Bytes> for EchoPacket {
 #[async_trait]
 impl PacketSelfHandler for EchoPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        ctx.req
+        ctx.udp
             .sock
-            .send_sas(&self.rest[..], &ctx.req.addr, &ctx.req.local_addr)?;
+            .send_sas(&self.rest[..], &ctx.udp.addr, &ctx.udp.local_addr)?;
 
         Ok(())
     }

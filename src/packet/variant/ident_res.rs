@@ -1,8 +1,9 @@
+use crate::core::node::{Node, NodeColor, NodeKind};
+use crate::core::server::KizunaCtx;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
 use crate::packet::Packet;
 use crate::util::addr::{bytes_to_ip, ip_to_bytes};
-use crate::{KizunaCtx, Node, NodeColor};
 use async_trait::async_trait;
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::{BufMut, Bytes, BytesMut};
@@ -62,19 +63,20 @@ impl TryFrom<Bytes> for IdentResPacket {
 impl PacketSelfHandler for IdentResPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
         let color =
-            if ctx.req.local_addr == self.ip && ctx.req.sock.local_addr()?.port() == self.port {
+            if ctx.udp.local_addr == self.ip && ctx.udp.sock.local_addr()?.port() == self.port {
                 NodeColor::White
             } else {
                 NodeColor::Gray
             };
 
-        ctx.app.lock().unwrap().set_me(Node {
+        ctx.state.lock().unwrap().me = Some(Node {
+            kind: NodeKind::Me,
             color,
             ip: self.ip,
             port: self.port,
         });
 
-        println!("{:?}", ctx.app.clone().lock().unwrap().me);
+        println!("{:?}", ctx.state.clone().lock().unwrap().me);
 
         Ok(())
     }

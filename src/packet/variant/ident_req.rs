@@ -1,7 +1,7 @@
+use crate::core::server::KizunaCtx;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError};
 use crate::packet::{IdentResPacket, Packet};
-use crate::KizunaCtx;
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
@@ -39,12 +39,12 @@ impl TryFrom<Bytes> for IdentReqPacket {
 #[async_trait]
 impl PacketSelfHandler for IdentReqPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        let res = IdentResPacket::new(ctx.req.addr.ip(), ctx.req.addr.port());
+        let res = IdentResPacket::new(ctx.udp.addr.ip(), ctx.udp.addr.port());
         let res_bytes: Bytes = res.into();
 
-        ctx.req
+        ctx.udp
             .sock
-            .send_sas(res_bytes.as_ref(), &ctx.req.addr, &ctx.req.local_addr)?;
+            .send_sas(res_bytes.as_ref(), &ctx.udp.addr, &ctx.udp.local_addr)?;
 
         Ok(())
     }
