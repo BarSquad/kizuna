@@ -15,8 +15,7 @@ pub struct RequestCtx {
 }
 
 pub struct UdpServer<F> {
-    // TODO: Убрать pub
-    pub sock: Arc<UdpSocket>,
+    sock: Arc<UdpSocket>,
     handler: Option<Arc<F>>,
 }
 
