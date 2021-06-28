@@ -1,4 +1,4 @@
-use crate::udp::UdpCtx;
+use crate::udp::{UdpCtx, UdpError};
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::io;
@@ -8,7 +8,7 @@ use udp_sas::UdpSas;
 
 #[async_trait]
 pub trait UdpHandler: Sync + Send + 'static {
-    async fn handle(&self, ctx: UdpCtx) -> Result<(), ()>;
+    async fn handle(&self, ctx: UdpCtx) -> Result<(), UdpError>;
 }
 
 pub struct UdpServer {
@@ -16,13 +16,12 @@ pub struct UdpServer {
     handler: Arc<dyn UdpHandler>,
 }
 
-// TODO: Добавить прокидывание ошибок
 // TODO: Реализовать нормальное логгирование
 impl UdpServer {
     pub fn bind<A: ToSocketAddrs, H: UdpHandler>(addr: A, handler: H) -> io::Result<Self> {
         let sock = UdpSocket::bind_sas(addr)?;
 
-        println!("Started server on: {:?}", sock.local_addr()?);
+        println!("Started server on: {}", sock.local_addr()?);
 
         Ok(Self {
             sock: Arc::new(sock),
@@ -50,7 +49,7 @@ impl UdpServer {
 
             tokio::spawn(async move {
                 match handler.handle(ctx).await {
-                    Err(err) => eprintln!("{:?}", err),
+                    Err(err) => eprintln!("{}", err),
                     _ => (),
                 };
             });

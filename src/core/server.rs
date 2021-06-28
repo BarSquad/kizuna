@@ -1,6 +1,6 @@
 use crate::core::node::Node;
 use crate::packet::{Packet, PacketSelfHandler};
-use crate::udp::{UdpCtx, UdpHandler, UdpServer};
+use crate::udp::{UdpCtx, UdpError, UdpHandler, UdpServer};
 use async_trait::async_trait;
 use std::convert::TryFrom;
 use std::io;
@@ -28,14 +28,14 @@ struct KizunaHandler {
 
 #[async_trait]
 impl UdpHandler for KizunaHandler {
-    async fn handle(&self, ctx: UdpCtx) -> Result<(), ()> {
-        let packet = Packet::try_from(ctx.bytes.clone()).unwrap();
+    async fn handle(&self, ctx: UdpCtx) -> Result<(), UdpError> {
+        let packet = Packet::try_from(ctx.bytes.clone())?;
         let ctx = KizunaCtx {
             udp: ctx,
             state: self.state.clone(),
         };
 
-        Ok(packet.handle(&ctx).await.unwrap())
+        Ok(packet.handle(&ctx).await?)
     }
 }
 

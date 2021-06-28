@@ -1,3 +1,4 @@
+use crate::udp::UdpError;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
@@ -16,6 +17,12 @@ pub struct ParsePacketError {
     pub kind: ParsePacketErrorKind,
 }
 
+impl ParsePacketError {
+    pub fn new(kind: ParsePacketErrorKind) -> Self {
+        Self { kind }
+    }
+}
+
 impl fmt::Display for ParsePacketError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
@@ -23,12 +30,6 @@ impl fmt::Display for ParsePacketError {
 }
 
 impl Error for ParsePacketError {}
-
-impl ParsePacketError {
-    pub fn new(kind: ParsePacketErrorKind) -> Self {
-        Self { kind }
-    }
-}
 
 #[derive(Debug)]
 pub enum HandlePacketError {
@@ -63,5 +64,17 @@ impl Error for HandlePacketError {
             HandlePacketError::IoError(err) => err,
             HandlePacketError::ParsePacketError(err) => err,
         })
+    }
+}
+
+impl From<ParsePacketError> for UdpError {
+    fn from(err: ParsePacketError) -> Self {
+        UdpError::new(HandlePacketError::ParsePacketError(err))
+    }
+}
+
+impl From<HandlePacketError> for UdpError {
+    fn from(err: HandlePacketError) -> Self {
+        UdpError::new(err)
     }
 }
