@@ -8,7 +8,7 @@ use udp_sas::UdpSas;
 
 #[async_trait]
 pub trait UdpHandler: Sync + Send + 'static {
-    async fn handle(&self, ctx: &UdpCtx) -> Result<(), ()>;
+    async fn handle(&self, ctx: UdpCtx) -> Result<(), ()>;
 }
 
 pub struct UdpServer {
@@ -49,7 +49,7 @@ impl UdpServer {
             let handler = self.handler.clone();
 
             tokio::spawn(async move {
-                match handler.handle(&ctx).await {
+                match handler.handle(ctx).await {
                     Err(err) => eprintln!("{:?}", err),
                     _ => (),
                 };

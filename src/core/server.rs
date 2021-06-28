@@ -12,8 +12,8 @@ pub struct KizunaState {
     pub nodes: Vec<Node>,
 }
 
-pub struct KizunaCtx<'a> {
-    pub(crate) udp: &'a UdpCtx,
+pub struct KizunaCtx {
+    pub(crate) udp: UdpCtx,
     pub(crate) state: Arc<Mutex<KizunaState>>,
 }
 
@@ -28,7 +28,7 @@ struct KizunaHandler {
 
 #[async_trait]
 impl UdpHandler for KizunaHandler {
-    async fn handle(&self, ctx: &UdpCtx) -> Result<(), ()> {
+    async fn handle(&self, ctx: UdpCtx) -> Result<(), ()> {
         let packet = Packet::try_from(ctx.bytes.clone()).unwrap();
         let ctx = KizunaCtx {
             udp: ctx,
