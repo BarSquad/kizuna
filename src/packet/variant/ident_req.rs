@@ -42,9 +42,7 @@ impl PacketSelfHandler for IdentReqPacket {
         let res = IdentResPacket::new(ctx.udp.addr.ip(), ctx.udp.addr.port());
         let res_bytes: Bytes = res.into();
 
-        ctx.udp
-            .sock
-            .send_sas(res_bytes.as_ref(), &ctx.udp.addr, &ctx.udp.local_addr)?;
+        ctx.udp.resp(&res_bytes)?;
 
         Ok(())
     }

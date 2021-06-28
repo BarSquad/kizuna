@@ -1,17 +1,10 @@
+use crate::udp::UdpCtx;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::io;
 use std::net::{IpAddr, SocketAddr, ToSocketAddrs, UdpSocket};
 use std::sync::Arc;
 use udp_sas::UdpSas;
-
-#[derive(Debug)]
-pub struct UdpCtx {
-    pub sock: Arc<UdpSocket>,
-    pub addr: SocketAddr,
-    pub local_addr: IpAddr,
-    pub bytes: Bytes,
-}
 
 #[async_trait]
 pub trait UdpHandler: Sync + Send + 'static {

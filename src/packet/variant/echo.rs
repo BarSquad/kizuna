@@ -32,9 +32,7 @@ impl TryFrom<Bytes> for EchoPacket {
 #[async_trait]
 impl PacketSelfHandler for EchoPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        ctx.udp
-            .sock
-            .send_sas(&self.rest[..], &ctx.udp.addr, &ctx.udp.local_addr)?;
+        ctx.udp.resp_raw(&self.rest[..])?;
 
         Ok(())
     }
