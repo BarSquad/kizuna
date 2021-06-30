@@ -1,4 +1,4 @@
-use crate::core::node::Node;
+use crate::core::KizunaStateStruct;
 use crate::packet::{Packet, PacketSelfHandler};
 use crate::udp::{UdpCtx, UdpError, UdpHandler, UdpServer};
 use async_trait::async_trait;
@@ -7,23 +7,18 @@ use std::io;
 use std::net::ToSocketAddrs;
 use std::sync::{Arc, Mutex};
 
-pub struct KizunaState {
-    pub me: Option<Node>,
-    pub nodes: Vec<Node>,
-}
-
 pub struct KizunaCtx {
-    pub(crate) udp: UdpCtx,
-    pub(crate) state: Arc<Mutex<KizunaState>>,
+    pub udp: UdpCtx,
+    pub state: Arc<Mutex<KizunaStateStruct>>,
 }
 
 pub struct KizunaServer {
     udp: UdpServer,
-    state: Arc<Mutex<KizunaState>>,
+    state: Arc<Mutex<KizunaStateStruct>>,
 }
 
 struct KizunaHandler {
-    state: Arc<Mutex<KizunaState>>,
+    state: Arc<Mutex<KizunaStateStruct>>,
 }
 
 #[async_trait]
@@ -41,7 +36,7 @@ impl UdpHandler for KizunaHandler {
 
 impl KizunaServer {
     pub fn bind<A: ToSocketAddrs>(addr: A) -> io::Result<Self> {
-        let state = Arc::new(Mutex::new(KizunaState {
+        let state = Arc::new(Mutex::new(KizunaStateStruct {
             me: None,
             nodes: Vec::new(),
         }));

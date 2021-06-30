@@ -6,7 +6,7 @@ mod packet;
 mod udp;
 mod util;
 
-const ADDR: &'static str = "0.0.0.0:12345";
+static ADDR: &'static str = "0.0.0.0:12345";
 
 // TODO: Написать для RequestCtx хелпующие методы, которые позволят отправлять Bytes и Packet
 

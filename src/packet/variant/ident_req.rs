@@ -5,7 +5,6 @@ use crate::packet::{IdentResPacket, Packet};
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
-use udp_sas::UdpSas;
 
 pub struct IdentReqPacket {}
 

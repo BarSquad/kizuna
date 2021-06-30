@@ -4,7 +4,6 @@ use crate::packet::error::{HandlePacketError, ParsePacketError};
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::convert::TryFrom;
-use udp_sas::UdpSas;
 
 const PONG_BYTES: &'static [u8] = "Pong\n".as_bytes();
 

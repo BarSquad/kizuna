@@ -5,7 +5,6 @@ use crate::packet::Packet;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::convert::TryFrom;
-use udp_sas::UdpSas;
 
 pub struct EchoPacket {
     rest: Vec<u8>,

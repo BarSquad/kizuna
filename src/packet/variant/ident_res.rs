@@ -1,5 +1,6 @@
 use crate::core::node::{Node, NodeColor, NodeKind};
 use crate::core::server::KizunaCtx;
+use crate::core::KizunaState;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
 use crate::packet::Packet;
@@ -69,14 +70,14 @@ impl PacketSelfHandler for IdentResPacket {
                 NodeColor::Gray
             };
 
-        ctx.state.lock().unwrap().me = Some(Node {
+        ctx.state.identify(Node {
             kind: NodeKind::Me,
             color,
             ip: self.ip,
             port: self.port,
         });
 
-        println!("{:?}", ctx.state.clone().lock().unwrap().me);
+        println!("{:?}", ctx.state.me());
 
         Ok(())
     }

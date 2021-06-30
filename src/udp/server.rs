@@ -2,7 +2,7 @@ use crate::udp::{UdpCtx, UdpError};
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::io;
-use std::net::{IpAddr, SocketAddr, ToSocketAddrs, UdpSocket};
+use std::net::{ToSocketAddrs, UdpSocket};
 use std::sync::Arc;
 use udp_sas::UdpSas;
 
