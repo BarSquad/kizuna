@@ -31,6 +31,7 @@ impl UdpServer {
 
     pub fn run(&self) -> io::Result<()> {
         let sock = self.sock.clone();
+        let local_port = sock.local_addr()?.port();
 
         let mut buf = [0; 1024];
 
@@ -40,6 +41,7 @@ impl UdpServer {
                 sock: sock.clone(),
                 addr,
                 local_addr,
+                local_port,
                 bytes: Bytes::from(buf[..len].to_vec()),
             };
 

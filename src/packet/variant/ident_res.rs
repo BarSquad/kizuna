@@ -59,16 +59,14 @@ impl TryFrom<Bytes> for IdentResPacket {
     }
 }
 
-// TODO: Написать обработку запроса (Запись адреса и определения цвета)
 #[async_trait]
 impl PacketSelfHandler for IdentResPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        let color =
-            if ctx.udp.local_addr == self.ip && ctx.udp.sock.local_addr()?.port() == self.port {
-                NodeColor::White
-            } else {
-                NodeColor::Gray
-            };
+        let color = if ctx.udp.local_addr == self.ip && ctx.udp.local_port == self.port {
+            NodeColor::White
+        } else {
+            NodeColor::Gray
+        };
 
         ctx.state.identify(Node {
             kind: NodeKind::Me,
@@ -76,8 +74,6 @@ impl PacketSelfHandler for IdentResPacket {
             ip: self.ip,
             port: self.port,
         });
-
-        println!("{:?}", ctx.state.me());
 
         Ok(())
     }
