@@ -7,21 +7,25 @@ pub struct KizunaStateStruct {
     pub nodes: Vec<Node>,
 }
 
+impl KizunaStateStruct {
+    pub fn new() -> Self {
+        Self {
+            me: None,
+            nodes: Vec::new(),
+        }
+    }
+}
+
 pub trait KizunaState {
-    fn new() -> Self;
+    fn new() -> Arc<Mutex<KizunaStateStruct>> {
+        Arc::new(Mutex::new(KizunaStateStruct::new()))
+    }
 
     fn identify(&self, node: Node);
     fn me(&self) -> Option<Node>;
 }
 
 impl KizunaState for Arc<Mutex<KizunaStateStruct>> {
-    fn new() -> Self {
-        Arc::new(Mutex::new(KizunaStateStruct {
-            me: None,
-            nodes: Vec::new(),
-        }))
-    }
-
     fn identify(&self, node: Node) {
         match self.lock() {
             Ok(mut state) => state.me = Some(node),
