@@ -1,4 +1,4 @@
-use crate::core::server::KizunaCtx;
+use crate::core::KizunaCtx;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
 use crate::packet::{EchoPacket, IdentReqPacket, IdentResPacket, PingPacket};
 use async_trait::async_trait;
@@ -23,10 +23,21 @@ impl Packet {
     pub const HEADER_LEN: usize = Packet::SIG.len() + 1;
 }
 
-impl TryFrom<Bytes> for Packet {
+impl Into<Bytes> for &Packet {
+    fn into(self) -> Bytes {
+        match self {
+            Packet::Echo(packet) => packet.into(),
+            Packet::Ping(packet) => packet.into(),
+            Packet::IdentReq(packet) => packet.into(),
+            Packet::IdentRes(packet) => packet.into(),
+        }
+    }
+}
+
+impl TryFrom<&Bytes> for Packet {
     type Error = ParsePacketError;
 
-    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
+    fn try_from(bytes: &Bytes) -> Result<Self, Self::Error> {
         if !bytes.starts_with(Packet::SIG) {
             return Err(ParsePacketError::new(ParsePacketErrorKind::InvalidSig));
         }

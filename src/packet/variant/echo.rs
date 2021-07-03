@@ -1,9 +1,9 @@
-use crate::core::server::KizunaCtx;
+use crate::core::KizunaCtx;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError};
 use crate::packet::Packet;
 use async_trait::async_trait;
-use bytes::Bytes;
+use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
 
 pub struct EchoPacket {
@@ -18,10 +18,21 @@ impl EchoPacket {
     }
 }
 
-impl TryFrom<Bytes> for EchoPacket {
+impl Into<Bytes> for &EchoPacket {
+    fn into(self) -> Bytes {
+        let mut bytes = BytesMut::new();
+
+        bytes.put(Packet::SIG);
+        bytes.put_u8(EchoPacket::PKT);
+
+        Bytes::from(bytes)
+    }
+}
+
+impl TryFrom<&Bytes> for EchoPacket {
     type Error = ParsePacketError;
 
-    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
+    fn try_from(bytes: &Bytes) -> Result<Self, Self::Error> {
         let rest = bytes[Packet::HEADER_LEN..].to_vec();
 
         Ok(EchoPacket::new(rest))

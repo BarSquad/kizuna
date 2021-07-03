@@ -1,5 +1,5 @@
 use crate::core::node::{Node, NodeColor, NodeKind};
-use crate::core::server::KizunaCtx;
+use crate::core::KizunaCtx;
 use crate::core::KizunaState;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
@@ -24,7 +24,7 @@ impl IdentResPacket {
     }
 }
 
-impl Into<Bytes> for IdentResPacket {
+impl Into<Bytes> for &IdentResPacket {
     fn into(self) -> Bytes {
         let mut bytes = BytesMut::new();
 
@@ -37,10 +37,10 @@ impl Into<Bytes> for IdentResPacket {
     }
 }
 
-impl TryFrom<Bytes> for IdentResPacket {
+impl TryFrom<&Bytes> for IdentResPacket {
     type Error = ParsePacketError;
 
-    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
+    fn try_from(bytes: &Bytes) -> Result<Self, Self::Error> {
         if bytes.len() != Packet::HEADER_LEN + 18 {
             return Err(ParsePacketError::new(ParsePacketErrorKind::InvalidContent));
         }

@@ -1,8 +1,9 @@
-use crate::core::server::KizunaCtx;
+use crate::core::KizunaCtx;
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError};
+use crate::packet::Packet;
 use async_trait::async_trait;
-use bytes::Bytes;
+use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
 
 const PONG_BYTES: &'static [u8] = "Pong\n".as_bytes();
@@ -17,10 +18,21 @@ impl PingPacket {
     }
 }
 
-impl TryFrom<Bytes> for PingPacket {
+impl Into<Bytes> for &PingPacket {
+    fn into(self) -> Bytes {
+        let mut bytes = BytesMut::new();
+
+        bytes.put(Packet::SIG);
+        bytes.put_u8(PingPacket::PKT);
+
+        Bytes::from(bytes)
+    }
+}
+
+impl TryFrom<&Bytes> for PingPacket {
     type Error = ParsePacketError;
 
-    fn try_from(_: Bytes) -> Result<Self, Self::Error> {
+    fn try_from(_: &Bytes) -> Result<Self, Self::Error> {
         Ok(PingPacket::new())
     }
 }
