@@ -1,49 +1,52 @@
 use crate::core::node::Node;
-use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
+use async_trait::async_trait;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+#[derive(Debug)]
+pub enum KizunaStateKind {
+    Created,
+    Initialized,
+}
 
 pub struct KizunaStateStruct {
+    pub kind: KizunaStateKind,
     pub me: Option<Node>,
     pub nodes: Vec<Node>,
+
+    pub tick_rate: u64,
 }
 
 impl KizunaStateStruct {
     pub fn new() -> Self {
         Self {
+            kind: KizunaStateKind::Created,
             me: None,
             nodes: Vec::new(),
+
+            tick_rate: 2000,
         }
     }
 }
 
+#[async_trait]
 pub trait KizunaState {
-    fn new() -> Arc<Mutex<KizunaStateStruct>> {
-        Arc::new(Mutex::new(KizunaStateStruct::new()))
-    }
-
-    fn identify(&self, node: Node);
-    fn me(&self) -> Option<Node>;
+    async fn identify(&self, node: Node);
+    async fn me(&self) -> Option<Node>;
+    async fn get_tick_rate(&self) -> u64;
 }
 
-impl KizunaState for Arc<Mutex<KizunaStateStruct>> {
-    fn identify(&self, node: Node) {
-        match self.lock() {
-            Ok(mut state) => state.me = Some(node),
-            Err(err) => lock_panic(&err),
-        };
+#[async_trait]
+impl KizunaState for Arc<RwLock<KizunaStateStruct>> {
+    async fn identify(&self, node: Node) {
+        self.write().await.me = Some(node);
     }
 
-    fn me(&self) -> Option<Node> {
-        match self.lock() {
-            Ok(state) => state.me,
-            Err(err) => {
-                lock_panic(&err);
-                None
-            }
-        }
+    async fn me(&self) -> Option<Node> {
+        self.read().await.me
     }
-}
 
-fn lock_panic(err: &dyn Debug) {
-    panic!("KizunaState: lock failed {:?}", err);
+    async fn get_tick_rate(&self) -> u64 {
+        self.read().await.tick_rate
+    }
 }

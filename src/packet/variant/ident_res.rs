@@ -68,12 +68,14 @@ impl PacketSelfHandler for IdentResPacket {
             NodeColor::Gray
         };
 
-        ctx.state.identify(Node {
-            kind: NodeKind::Me,
-            color,
-            ip: self.ip,
-            port: self.port,
-        });
+        ctx.state
+            .identify(Node {
+                kind: NodeKind::Me,
+                color,
+                ip: self.ip,
+                port: self.port,
+            })
+            .await;
 
         Ok(())
     }

@@ -10,8 +10,9 @@ static ADDR: &'static str = "0.0.0.0:12345";
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let mut s = KizunaServer::bind(ADDR)?;
-    s.run()?;
+    let s = KizunaServer::bind(ADDR)?;
+
+    s.run().await?;
 
     Ok(())
 }

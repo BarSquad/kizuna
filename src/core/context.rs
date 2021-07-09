@@ -4,11 +4,12 @@ use crate::udp::UdpCtx;
 use bytes::Bytes;
 use std::io;
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 pub struct KizunaCtx {
     pub udp: UdpCtx,
-    pub state: Arc<Mutex<KizunaStateStruct>>,
+    pub state: Arc<RwLock<KizunaStateStruct>>,
 }
 
 impl KizunaCtx {
