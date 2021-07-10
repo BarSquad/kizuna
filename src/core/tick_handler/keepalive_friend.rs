@@ -1,3 +1,4 @@
+use crate::core::node::NodeKind;
 use crate::core::state::KizunaStateKind;
 use crate::core::tick_handler::{TickHandler, TickHandlerCtx};
 use crate::packet::{KeepalivePacket, Packet};
@@ -19,6 +20,10 @@ impl TickHandler for KeepaliveFriendTickHandler {
         let state = ctx.state.read().await;
 
         for node in &state.nodes {
+            if node.kind != NodeKind::Friend {
+                continue;
+            }
+
             println!("keepalive : {:?}", node);
             ctx.send(
                 &Packet::Keepalive(KeepalivePacket::new()),
