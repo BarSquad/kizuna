@@ -6,21 +6,21 @@ use async_trait::async_trait;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-pub struct KeepaliveFriendTickHandler {}
+pub struct KeepaliveComradeTickHandler {}
 
-impl KeepaliveFriendTickHandler {
+impl KeepaliveComradeTickHandler {
     pub fn new_box() -> Box<Self> {
-        Box::new(KeepaliveFriendTickHandler {})
+        Box::new(KeepaliveComradeTickHandler {})
     }
 }
 
 #[async_trait]
-impl TickHandler for KeepaliveFriendTickHandler {
+impl TickHandler for KeepaliveComradeTickHandler {
     async fn tick(&self, ctx: Arc<TickHandlerCtx>) {
         let state = ctx.state.read().await;
 
         for node in &state.nodes {
-            if node.kind != NodeKind::Friend {
+            if node.kind != NodeKind::Comrade {
                 continue;
             }
 
@@ -33,10 +33,10 @@ impl TickHandler for KeepaliveFriendTickHandler {
     }
 
     fn tick_period(&self) -> u64 {
-        4
+        2
     }
 
-    fn can_handle(&self, _: KizunaStateKind) -> bool {
-        true
+    fn can_handle(&self, state_kind: KizunaStateKind) -> bool {
+        state_kind == KizunaStateKind::Initialized
     }
 }
