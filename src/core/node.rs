@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum NodeKind {
     Me,
     Familiar,
@@ -8,7 +8,7 @@ pub enum NodeKind {
     Friend,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum NodeColor {
     White,
     Gray,

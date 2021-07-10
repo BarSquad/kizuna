@@ -15,11 +15,11 @@ pub struct UdpCtx {
 
 impl UdpCtx {
     pub fn send(&self, bytes: &Bytes, addr: &SocketAddr) -> io::Result<usize> {
-        self.sock.send_sas(&bytes[..], &addr, &self.local_addr)
+        self.sock.send_sas(&bytes[..], addr, &self.local_addr)
     }
 
     pub fn send_raw(&self, bytes: &[u8], addr: &SocketAddr) -> io::Result<usize> {
-        self.sock.send_sas(&bytes[..], &addr, &self.local_addr)
+        self.sock.send_sas(&bytes[..], addr, &self.local_addr)
     }
 
     pub fn resp(&self, bytes: &Bytes) -> io::Result<usize> {

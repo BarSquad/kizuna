@@ -1,9 +1,11 @@
+use crate::core::node::{NodeColor, NodeKind};
 use crate::core::state::KizunaStateKind;
-use crate::core::tick_handler::TickHandler;
-use crate::core::KizunaStateStruct;
+use crate::core::tick_handler::{TickHandler, TickHandlerCtx};
+use crate::packet::{IdentReqPacket, Packet};
 use async_trait::async_trait;
+use rand::seq::IteratorRandom;
+use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
 pub struct IdentTickHandler {}
 
@@ -15,20 +17,29 @@ impl IdentTickHandler {
 
 #[async_trait]
 impl TickHandler for IdentTickHandler {
-    async fn tick(&self, state: Arc<RwLock<KizunaStateStruct>>) {
-        state.write().await.kind = KizunaStateKind::Created;
-        println!(
-            "{:?} - {:?}",
-            state.read().await.current_tick,
-            state.read().await.kind
-        );
+    async fn tick(&self, ctx: Arc<TickHandlerCtx>) {
+        let state = ctx.state.read().await;
+        let nodes = &state.nodes;
+        let target = nodes
+            .into_iter()
+            .filter(|node| node.kind == NodeKind::Friend && node.color == NodeColor::White)
+            .choose(&mut rand::thread_rng());
+
+        if let Some(target) = target {
+            println!("ident : {:?}", target);
+            ctx.send(
+                &Packet::IdentReq(IdentReqPacket::new()),
+                &SocketAddr::new(target.ip, target.port),
+            )
+            .ok();
+        }
     }
 
     fn tick_period(&self) -> u64 {
-        4
+        20
     }
 
     fn can_handle(&self, state_kind: KizunaStateKind) -> bool {
-        state_kind == KizunaStateKind::Created || state_kind == KizunaStateKind::Initialized
+        state_kind == KizunaStateKind::Created
     }
 }

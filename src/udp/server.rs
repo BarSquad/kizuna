@@ -12,8 +12,8 @@ pub trait UdpHandler: Sync + Send + 'static {
 }
 
 pub struct UdpServer {
-    sock: Arc<UdpSocket>,
-    handler: Arc<dyn UdpHandler>,
+    pub sock: Arc<UdpSocket>,
+    pub handler: Arc<dyn UdpHandler>,
 }
 
 // TODO: Реализовать нормальное логгирование

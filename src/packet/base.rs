@@ -1,6 +1,6 @@
 use crate::core::KizunaCtx;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
-use crate::packet::{EchoPacket, IdentReqPacket, IdentResPacket, PingPacket};
+use crate::packet::{EchoPacket, IdentReqPacket, IdentResPacket, KeepalivePacket, PingPacket};
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::convert::TryFrom;
@@ -15,6 +15,7 @@ pub enum Packet {
     Ping(PingPacket),
     IdentReq(IdentReqPacket),
     IdentRes(IdentResPacket),
+    Keepalive(KeepalivePacket),
 }
 
 impl Packet {
@@ -30,6 +31,7 @@ impl Into<Bytes> for &Packet {
             Packet::Ping(packet) => packet.into(),
             Packet::IdentReq(packet) => packet.into(),
             Packet::IdentRes(packet) => packet.into(),
+            Packet::Keepalive(packet) => packet.into(),
         }
     }
 }
@@ -47,6 +49,7 @@ impl TryFrom<&Bytes> for Packet {
             Some(&PingPacket::PKT) => Ok(Packet::Ping(PingPacket::try_from(bytes)?)),
             Some(&IdentReqPacket::PKT) => Ok(Packet::IdentReq(IdentReqPacket::try_from(bytes)?)),
             Some(&IdentResPacket::PKT) => Ok(Packet::IdentRes(IdentResPacket::try_from(bytes)?)),
+            Some(&KeepalivePacket::PKT) => Ok(Packet::Keepalive(KeepalivePacket::try_from(bytes)?)),
             Some(_) => Err(ParsePacketError::new(ParsePacketErrorKind::UnknownType)),
             None => Err(ParsePacketError::new(ParsePacketErrorKind::InvalidType)),
         }
@@ -61,6 +64,7 @@ impl PacketSelfHandler for Packet {
             Packet::Ping(packet) => packet.handle(ctx).await,
             Packet::IdentReq(packet) => packet.handle(ctx).await,
             Packet::IdentRes(packet) => packet.handle(ctx).await,
+            Packet::Keepalive(packet) => packet.handle(ctx).await,
         }
     }
 }

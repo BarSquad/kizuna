@@ -1,4 +1,4 @@
-use crate::core::tick_handler::{get_tick_handlers, TickHandler};
+use crate::core::tick_handler::{get_tick_handlers, TickHandler, TickHandlerCtx};
 use crate::core::{KizunaCtx, KizunaStateStruct};
 use crate::packet::{Packet, PacketSelfHandler};
 use crate::udp::{UdpCtx, UdpError, UdpHandler, UdpServer};
@@ -62,24 +62,25 @@ impl KizunaServer {
     }
 
     pub async fn run_ticker(&self) {
-        let state = self.state.clone();
+        let ctx = Arc::new(TickHandlerCtx {
+            sock: self.udp.sock.clone(),
+            state: self.state.clone(),
+        });
+
         let tick_handlers = self.tick_handlers.clone();
 
         tokio::spawn(async move {
             loop {
                 sleep(Duration::from_millis(TICK_RATE)).await;
 
-                KizunaServer::tick(state.clone(), tick_handlers.clone()).await;
+                KizunaServer::tick(ctx.clone(), tick_handlers.clone()).await;
             }
         });
     }
 
-    pub async fn tick(
-        state: Arc<RwLock<KizunaStateStruct>>,
-        tick_handlers: Arc<Vec<Box<dyn TickHandler>>>,
-    ) {
+    pub async fn tick(ctx: Arc<TickHandlerCtx>, tick_handlers: Arc<Vec<Box<dyn TickHandler>>>) {
         let (state_kind, current_tick) = {
-            let state_unlocked = state.read().await;
+            let state_unlocked = ctx.state.read().await;
 
             let state_kind = state_unlocked.kind;
             let current_tick = state_unlocked.current_tick;
@@ -89,10 +90,10 @@ impl KizunaServer {
 
         for handler in tick_handlers.iter() {
             if handler.can_handle(state_kind) && current_tick % handler.tick_period() == 0 {
-                handler.tick(state.clone()).await;
+                handler.tick(ctx.clone()).await;
             }
         }
 
-        state.write().await.current_tick += 1;
+        ctx.state.write().await.current_tick += 1;
     }
 }
