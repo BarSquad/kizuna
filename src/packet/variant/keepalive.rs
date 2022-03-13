@@ -36,7 +36,7 @@ impl TryFrom<&Bytes> for KeepalivePacket {
 
 #[async_trait]
 impl PacketSelfHandler for KeepalivePacket {
-    async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
+    async fn handle(&self, _0: &KizunaCtx) -> Result<(), HandlePacketError> {
         // TODO: Перенос знакомых в приятелей, приятелей в друзей
 
         Ok(())

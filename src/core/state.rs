@@ -14,8 +14,6 @@ pub struct KizunaStateStruct {
     pub kind: KizunaStateKind,
     pub me: Option<Node>,
     pub nodes: Vec<Node>,
-
-    pub current_tick: u64,
 }
 
 impl KizunaStateStruct {
@@ -31,8 +29,6 @@ impl KizunaStateStruct {
             kind: KizunaStateKind::Created,
             me: None,
             nodes: test_init_nodes,
-
-            current_tick: 0,
         }
     }
 }

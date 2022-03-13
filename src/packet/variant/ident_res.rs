@@ -7,7 +7,7 @@ use crate::packet::Packet;
 use crate::util::addr::{bytes_to_ip, ip_to_bytes};
 use async_trait::async_trait;
 use byteorder::{ByteOrder, LittleEndian};
-use bytes::{Buf, BufMut, Bytes, BytesMut};
+use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
 use std::net::IpAddr;
 

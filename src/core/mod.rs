@@ -1,6 +1,5 @@
 pub mod node;
 pub mod server;
-pub mod tick_handler;
 
 mod context;
 mod state;
