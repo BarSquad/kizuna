@@ -16,7 +16,7 @@ pub struct UdpServer {
     pub handler: Arc<dyn UdpHandler>,
 }
 
-// TODO: Реализовать нормальное логгирование
+// TODO: Реализовать нормальное логирование
 impl UdpServer {
     pub fn bind<A: ToSocketAddrs, H: UdpHandler>(addr: A, handler: H) -> io::Result<Self> {
         let sock = UdpSocket::bind_sas(addr)?;

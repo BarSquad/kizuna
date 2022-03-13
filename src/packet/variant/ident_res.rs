@@ -7,7 +7,7 @@ use crate::packet::Packet;
 use crate::util::addr::{bytes_to_ip, ip_to_bytes};
 use async_trait::async_trait;
 use byteorder::{ByteOrder, LittleEndian};
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::{Buf, BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
 use std::net::IpAddr;
 
@@ -18,6 +18,10 @@ pub struct IdentResPacket {
 
 impl IdentResPacket {
     pub const PKT: u8 = 3;
+
+    pub const IP_LEN: usize = 16;
+    pub const PORT_LEN: usize = 2;
+    pub const LEN: usize = IdentResPacket::IP_LEN + IdentResPacket::PORT_LEN;
 
     pub fn new(ip: IpAddr, port: u16) -> Self {
         Self { ip, port }
@@ -41,12 +45,13 @@ impl TryFrom<&Bytes> for IdentResPacket {
     type Error = ParsePacketError;
 
     fn try_from(bytes: &Bytes) -> Result<Self, Self::Error> {
-        if bytes.len() != Packet::HEADER_LEN + 18 {
+        if bytes.len() != Packet::HEADER_LEN + IdentResPacket::LEN {
             return Err(ParsePacketError::new(ParsePacketErrorKind::InvalidContent));
         }
 
-        let ip_bytes = &bytes[Packet::HEADER_LEN..Packet::HEADER_LEN + 16];
-        let port_bytes = &bytes[Packet::HEADER_LEN + 16..Packet::HEADER_LEN + 18];
+        let ip_bytes = &bytes[Packet::HEADER_LEN..Packet::HEADER_LEN + IdentResPacket::IP_LEN];
+        let port_bytes = &bytes
+            [Packet::HEADER_LEN + IdentResPacket::IP_LEN..Packet::HEADER_LEN + IdentResPacket::LEN];
 
         let ip = match bytes_to_ip(ip_bytes) {
             Some(ip) => ip,

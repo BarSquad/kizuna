@@ -8,6 +8,7 @@ use std::convert::TryFrom;
 
 const PONG_BYTES: &'static [u8] = "Pong\n".as_bytes();
 
+// TODO: Удалить этот пакет
 pub struct PingPacket {}
 
 impl PingPacket {

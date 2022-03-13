@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use bytes::{BufMut, Bytes, BytesMut};
 use std::convert::TryFrom;
 
+// TODO: Удалить этот пакет
 pub struct EchoPacket {
     rest: Vec<u8>,
 }
