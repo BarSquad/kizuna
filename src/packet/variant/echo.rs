@@ -43,7 +43,7 @@ impl TryFrom<&Bytes> for EchoPacket {
 #[async_trait]
 impl PacketSelfHandler for EchoPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        ctx.udp.resp_raw(&self.rest[..])?;
+        ctx.udp.send(&self.rest[..])?;
 
         Ok(())
     }

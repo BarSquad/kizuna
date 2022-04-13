@@ -3,7 +3,6 @@ use crate::packet::Packet;
 use crate::udp::UdpCtx;
 use bytes::Bytes;
 use std::io;
-use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -13,15 +12,9 @@ pub struct KizunaCtx {
 }
 
 impl KizunaCtx {
-    pub fn send(self, packet: &Packet, addr: &SocketAddr) -> io::Result<usize> {
+    pub fn send(&self, packet: &Packet) -> io::Result<usize> {
         let bytes: Bytes = packet.into();
 
-        self.udp.send(&bytes, addr)
-    }
-
-    pub fn resp(&self, packet: &Packet) -> io::Result<usize> {
-        let bytes: Bytes = packet.into();
-
-        self.udp.resp(&bytes)
+        self.udp.send(&bytes)
     }
 }

@@ -40,7 +40,7 @@ impl PacketSelfHandler for IdentReqPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
         let res = Packet::IdentRes(IdentResPacket::new(ctx.udp.addr.ip(), ctx.udp.addr.port()));
 
-        ctx.resp(&res)?;
+        ctx.send(&res)?;
 
         Ok(())
     }

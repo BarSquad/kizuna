@@ -41,7 +41,7 @@ impl TryFrom<&Bytes> for PingPacket {
 #[async_trait]
 impl PacketSelfHandler for PingPacket {
     async fn handle(&self, ctx: &KizunaCtx) -> Result<(), HandlePacketError> {
-        ctx.udp.resp_raw(PONG_BYTES)?;
+        ctx.udp.send(PONG_BYTES)?;
 
         Ok(())
     }

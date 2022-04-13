@@ -4,14 +4,7 @@ use std::net::IpAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum KizunaStateKind {
-    Created,
-    Initialized,
-}
-
 pub struct KizunaStateStruct {
-    pub kind: KizunaStateKind,
     pub me: Option<Node>,
     pub nodes: Vec<Node>,
 }
@@ -26,7 +19,6 @@ impl KizunaStateStruct {
         }];
 
         Self {
-            kind: KizunaStateKind::Created,
             me: None,
             nodes: test_init_nodes,
         }
@@ -35,17 +27,12 @@ impl KizunaStateStruct {
 
 #[async_trait]
 pub trait KizunaState {
-    async fn change_kind(&self, kind: KizunaStateKind);
     async fn identify(&self, node: Node);
     async fn me(&self) -> Option<Node>;
 }
 
 #[async_trait]
 impl KizunaState for Arc<RwLock<KizunaStateStruct>> {
-    async fn change_kind(&self, kind: KizunaStateKind) {
-        self.write().await.kind = kind;
-    }
-
     async fn identify(&self, node: Node) {
         self.write().await.me = Some(node);
     }

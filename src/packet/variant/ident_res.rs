@@ -1,6 +1,6 @@
 use crate::core::node::{Node, NodeColor, NodeKind};
+use crate::core::KizunaCtx;
 use crate::core::KizunaState;
-use crate::core::{KizunaCtx, KizunaStateKind};
 use crate::packet::base::PacketSelfHandler;
 use crate::packet::error::{HandlePacketError, ParsePacketError, ParsePacketErrorKind};
 use crate::packet::Packet;
@@ -83,8 +83,6 @@ impl PacketSelfHandler for IdentResPacket {
             .await;
 
         println!("I am {:?}", ctx.state.me().await);
-
-        ctx.state.change_kind(KizunaStateKind::Initialized).await;
 
         Ok(())
     }
